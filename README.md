@@ -81,7 +81,16 @@ sorry scan; `#print axioms` output and check; kernel replay log). A pass means:
 `lake build` succeeds, 0 `sorry`, and every `#print axioms` lists only
 `propext`, `Classical.choice`, `Quot.sound`. Local build logs are not certificates.
 
-CI certificate run: _to be filled in from the first green CI run._
+### Certificate of record
+
+- Run: https://github.com/BenFrohman/tf-frohmanian-tether-audit/actions/runs/45271410419 (attempt 1, `success`)
+- Commit: `50d11b00c02c5bb559e089b6e2ad462a397dc732` (later commits that only add this certificate text leave every `.lean` file, `lakefile.lean`, `lean-toolchain` and `lake-manifest.json` byte-identical; each push gets its own CI run)
+- Artifact: `lean-kernel-certificate` (id 14868825215, digest `sha256:18a00ce2c68fb996c0618752136503c63f842d5a720db5a323ce23696b7cb57f`), created November 23, 2026, 4:06 PM CST
+- Environment: Lean 4.30.0-rc1 (commit `714601ba`), Lake 5.0.0-src+714601b, elan 4.4.0, Mathlib `0c154d67103f74be3a0f2c509f72ccbf5be9f2a7`, manifest sha256 `b81d814b7d2d2d2821b03ed679324d5e7ec7da674e0a977352d01c88cbe8ccb8`
+- `build.log`: `Build completed successfully (3291 jobs).`
+- `sorry.txt`: 0 `declaration uses 'sorry'` warnings; 0 `sorry`/`admit`/`native_decide`/`axiom` outside comments
+- `axioms-check.txt`: 30 `#print axioms` commands, 30 results, every one `depends on axioms: [propext, Classical.choice, Quot.sound]`
+- `leanchecker.txt`: `RESULT: 6 modules replayed through the kernel, 0 failures`
 
 ## Author
 

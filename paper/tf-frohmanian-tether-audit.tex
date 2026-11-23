@@ -264,7 +264,33 @@ there are 0 \texttt{sorry}, and every \texttt{\#print axioms} lists only
 \texttt{propext}, \texttt{Classical.choice}, \texttt{Quot.sound}.
 
 %CERT-BEGIN
-\noindent\textbf{CI certificate run:} to be filled in from the first green CI run.
+\medskip\sloppy
+\noindent\textbf{CI certificate (GitHub Actions, workflow \texttt{Lean kernel certificate}).}
+\begin{itemize}
+\item Run: \url{https://github.com/BenFrohman/tf-frohmanian-tether-audit/actions/runs/45271410419}
+(attempt 1, conclusion \texttt{success}).
+\item Commit: \texttt{50d11b00c02c5bb559e089b6e2ad462a397dc732}. Every
+\texttt{.lean} file, \texttt{lakefile.lean}, \texttt{lean-toolchain} and
+\texttt{lake-manifest.json} in later commits that only add this
+certificate text are byte-identical to that commit.
+\item Artifact: \texttt{lean-kernel-certificate} (id 14868825215, 7615 bytes,
+digest \texttt{sha256:18a00ce2c68fb996\allowbreak c0618752136503c6\allowbreak 3f842d5a720db5a3\allowbreak 23ce23696b7cb57f}),
+created November 23, 2026, 4:06 PM CST (America/Chicago).
+\item Environment (from \texttt{environment.txt}): Lean 4.30.0-rc1 (commit
+\texttt{714601ba}), Lake 5.0.0-src+714601b, elan 4.4.0; Mathlib
+\texttt{0c154d67103f74be3a0f2c509f72ccbf5be9f2a7}; \texttt{lake-manifest.json}
+sha256 \texttt{b81d814b\ldots e8ccb8} (checked equal to the pin before and after the build).
+\item \texttt{build.log}: \texttt{Build completed successfully (3291 jobs).}
+\item \texttt{sorry.txt}: 0 \texttt{declaration uses 'sorry'} warnings; 0
+\texttt{sorry}/\texttt{admit}/\texttt{native\_decide}/\texttt{axiom} occurrences outside comments in 7 Lean files.
+\item \texttt{axioms-check.txt}: 30 \texttt{\#print axioms} commands, 30 results, each
+\begin{Verbatim}[fontsize=\small]
+depends on axioms: [propext, Classical.choice, Quot.sound]
+\end{Verbatim}
+for every theorem named in this paper (and the supporting lemmas listed in Section~\ref{sec:antisym}).
+\item \texttt{leanchecker.txt}: \texttt{RESULT: 6 modules replayed through the kernel, 0 failures}
+(the \texttt{leanchecker} shipped with v4.30.0-rc1, run once per module).
+\end{itemize}
 %CERT-END
 
 \section*{License}
