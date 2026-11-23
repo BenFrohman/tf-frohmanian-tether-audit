@@ -60,7 +60,6 @@ theorem K_FT_uu_eq_zero_iff (ω u : Fin 3 → ℝ) :
       funext i
       have hi := congrFun hz i
       rw [P_δC_perp, Pi_u, if_neg h0] at hi
-      dsimp only at hi
       show u i = dot u ω / dot ω ω * ω i
       linarith
   · rintro (hω | ⟨c, hc⟩)
