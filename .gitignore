@@ -1,0 +1,12 @@
+/.lake/
+/build/
+*.olean
+*.ilean
+/cert-out/
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz

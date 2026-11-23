@@ -1,0 +1,125 @@
+# Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.
+# Released under Apache 2.0 license as described in the file LICENSE.
+# Authors: Benjamin Stanley Frohman
+#
+# Lean kernel certificate. Builds the repository with its own lean-toolchain and
+# lake-manifest.json, scans for sorry/admit/native_decide/axiom, runs every
+# `#print axioms` in TFFrohmanianTether/AxiomAudit.lean, re-checks every module
+# with Lean's kernel replay (leanchecker), and uploads all logs as the artifact
+# `lean-kernel-certificate`, whether the run passes or fails.
+
+name: Lean kernel certificate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  kernel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install elan (toolchain from lean-toolchain)
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Record environment (commit, toolchain, Mathlib revision, elan/lake/lean, manifest sha256)
+        run: |
+          mkdir -p cert-out
+          {
+            echo "repository: $GITHUB_REPOSITORY"
+            echo "commit: $(git rev-parse HEAD)"
+            echo "run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID (attempt $GITHUB_RUN_ATTEMPT)"
+            echo "lean-toolchain: $(cat lean-toolchain)"
+            echo "lean-toolchain sha256: $(sha256sum lean-toolchain | cut -d' ' -f1)"
+            echo "lake-manifest.json sha256: $(sha256sum lake-manifest.json | cut -d' ' -f1)"
+            echo "mathlib rev: $(python3 -c 'import json;print([p["rev"] for p in json.load(open("lake-manifest.json"))["packages"] if p["name"]=="mathlib"][0])')"
+            echo "elan --version: $(elan --version)"
+            echo "lean --version: $(lean --version)"
+            echo "lake --version: $(lake --version)"
+            echo "runner: $(uname -srm)"
+            echo "date (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } | tee cert-out/environment.txt
+          cp lake-manifest.json lean-toolchain cert-out/
+
+      - name: Check pinned manifest hash
+        run: |
+          echo "b81d814b7d2d2d2821b03ed679324d5e7ec7da674e0a977352d01c88cbe8ccb8  lake-manifest.json" | sha256sum -c - | tee cert-out/manifest-check.txt
+
+      - name: Get Mathlib cache
+        run: |
+          set -o pipefail
+          lake exe cache get 2>&1 | tee cert-out/cache-get.log
+
+      - name: lake build (full log)
+        run: |
+          set -o pipefail
+          lake build 2>&1 | tee cert-out/build.log
+          # The manifest must not have been rewritten by the build.
+          echo "b81d814b7d2d2d2821b03ed679324d5e7ec7da674e0a977352d01c88cbe8ccb8  lake-manifest.json" | sha256sum -c -
+
+      - name: sorry check (build log and sources)
+        run: |
+          set -o pipefail
+          n=$(grep -c "declaration uses 'sorry'" cert-out/build.log || true)
+          echo "build-log 'declaration uses sorry' warnings: $n" | tee cert-out/sorry.txt
+          python3 scripts/sorry_scan.py 2>&1 | tee -a cert-out/sorry.txt
+          [ "$n" = "0" ]
+
+      - name: '#print axioms (AxiomAudit.lean)'
+        run: |
+          set -o pipefail
+          lake env lean TFFrohmanianTether/AxiomAudit.lean 2>&1 | tee cert-out/axioms.txt
+          python3 scripts/check_axioms.py cert-out/axioms.txt 2>&1 | tee cert-out/axioms-check.txt
+
+      - name: Kernel replay of every module (leanchecker, one module per run)
+        run: |
+          set -o pipefail
+          LEANBIN="$(dirname "$(elan which lean)")"
+          PREFIX="$(dirname "$LEANBIN")"
+          VER="$(sed 's/.*://' lean-toolchain | tr -d '[:space:]')"
+          if [ -f "$PREFIX/src/lean/LeanChecker.lean" ]; then
+            sed 's/target\.isPrefixOf m/target == m/' "$PREFIX/src/lean/LeanChecker.lean" > /tmp/LeanCheckerExact.lean
+            echo "checker: leanchecker source shipped with $VER (src/lean/LeanChecker.lean), prefix match -> exact match, run with lean --run" > cert-out/leanchecker.txt
+            check() { lake env lean --run /tmp/LeanCheckerExact.lean -v "$1"; }
+          elif git ls-remote --exit-code --tags https://github.com/leanprover/lean4checker "refs/tags/$VER" >/dev/null; then
+            git clone -q --depth 1 --branch "$VER" https://github.com/leanprover/lean4checker /tmp/lean4checker
+            sed -i 's/target\.isPrefixOf m/target == m/' /tmp/lean4checker/Main.lean
+            (cd /tmp/lean4checker && lake build lean4checker)
+            echo "checker: lean4checker tag $VER ($(git -C /tmp/lean4checker rev-parse HEAD))" > cert-out/leanchecker.txt
+            check() { lake env /tmp/lean4checker/.lake/build/bin/lean4checker -v "$1"; }
+          else
+            echo "FAIL: no leanchecker for $VER" | tee cert-out/leanchecker.txt; exit 1
+          fi
+          for m in TFFrohmanianTether TFFrohmanianTether.Basic TFFrohmanianTether.Semantics TFFrohmanianTether.Direction TFFrohmanianTether.Alignment TFFrohmanianTether.AxiomAudit; do
+            if out=$(check "$m" 2>&1); then echo "$m: OK"; else echo "$m: FAILED"; echo "$out" | tail -20; fi
+          done | tee -a cert-out/leanchecker.txt
+          if grep -q ': FAILED$' cert-out/leanchecker.txt; then exit 1; fi
+          echo "RESULT: $(grep -c ': OK$' cert-out/leanchecker.txt) modules replayed through the kernel, 0 failures" | tee -a cert-out/leanchecker.txt
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "job status: ${{ job.status }}"
+            cat cert-out/environment.txt 2>/dev/null
+            tail -1 cert-out/build.log 2>/dev/null
+            cat cert-out/sorry.txt 2>/dev/null
+            cat cert-out/axioms-check.txt 2>/dev/null
+            tail -1 cert-out/leanchecker.txt 2>/dev/null
+          } | tee cert-out/SUMMARY.txt
+          ( cd cert-out && sha256sum $(ls | grep -v '^SHA256SUMS$') > SHA256SUMS )
+
+      - name: Upload certificate artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lean-kernel-certificate
+          path: cert-out/

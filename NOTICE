@@ -1,0 +1,14 @@
+TF Frohmanian Tether: Lean audit of the TF kernels
+Copyright (c) 2026 Benjamin Stanley Frohman
+
+This product was created by Benjamin Stanley Frohman
+(ORCID https://orcid.org/0009-0006-7068-3718).
+
+The Lean code is licensed under the Apache License, Version 2.0 (see LICENSE).
+The paper in paper/ is licensed under the Creative Commons Attribution 4.0
+International License (CC-BY-4.0).
+
+If you use this work, please cite it as described in CITATION.cff:
+
+  Frohman, Benjamin Stanley (2026). TF Frohmanian Tether: Lean audit of the
+  TF kernels. https://github.com/BenFrohman/tf-frohmanian-tether-audit
