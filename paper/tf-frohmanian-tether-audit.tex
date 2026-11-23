@@ -244,13 +244,13 @@ statement~\cite{Fef06} are not addressed.
 
 \section{Reproducibility and certificate}\label{sec:cert}
 Source: \url{https://github.com/BenFrohman/tf-frohmanian-tether-audit}.
-Pins:
+Pins (the committed toolchain and Mathlib revision):
 \begin{Verbatim}[fontsize=\small]
 lean-toolchain      leanprover/lean4:v4.30.0-rc1
 Mathlib rev         0c154d67103f74be3a0f2c509f72ccbf5be9f2a7
-lake-manifest.json  sha256 b81d814b7d2d2d2821b03ed679324d5e
-                           7ec7da674e0a977352d01c88cbe8ccb8
 \end{Verbatim}
+The official \texttt{lake-manifest.json} sha256 is the one CI computes and
+writes into the certificate artifact; it must match the committed file.
 Build:
 \begin{Verbatim}[fontsize=\small]
 lake exe cache get
@@ -258,40 +258,22 @@ lake build
 lake env lean TFFrohmanianTether/AxiomAudit.lean
 \end{Verbatim}
 The official certificate is the GitHub Actions run of
-\texttt{.github/workflows/lean-kernel.yml} on the exact commit and its artifact
-\texttt{lean-kernel-certificate}. A pass means \texttt{lake build} succeeds,
-there are 0 \texttt{sorry}, and every \texttt{\#print axioms} lists only
+\texttt{.github/workflows/lean-kernel.yml} on the exact commit, and the
+artifact that run uploads. The artifact name includes the run id and the
+attempt, and it is uploaded on both success and failure. It holds the
+repo's \texttt{lake-manifest.json}, the sha256 CI computed for it,
+\texttt{lean-toolchain} and the elan/lake/lean versions, the full build
+log, the sorry/admit/native\_decide scan of that log and of every
+\texttt{.lean} file (no skip lists), \texttt{\#print axioms} /
+\texttt{collectAxioms} output for every theorem, and the leanchecker
+results. A pass means \texttt{lake build} succeeds, the manifest sha256
+does not drift, there are 0 \texttt{sorry}, \texttt{admit} or
+\texttt{native\_decide}, and every \texttt{\#print axioms} lists only
 \texttt{propext}, \texttt{Classical.choice}, \texttt{Quot.sound}.
-
-%CERT-BEGIN
-\medskip\sloppy
-\noindent\textbf{CI certificate (GitHub Actions, workflow \texttt{Lean kernel certificate}).}
-\begin{itemize}
-\item Run: \url{https://github.com/BenFrohman/tf-frohmanian-tether-audit/actions/runs/45271410419}
-(attempt 1, conclusion \texttt{success}).
-\item Commit: \texttt{50d11b00c02c5bb559e089b6e2ad462a397dc732}. Every
-\texttt{.lean} file, \texttt{lakefile.lean}, \texttt{lean-toolchain} and
-\texttt{lake-manifest.json} in later commits that only add this
-certificate text are byte-identical to that commit.
-\item Artifact: \texttt{lean-kernel-certificate} (id 14868825215, 7615 bytes,
-digest \texttt{sha256:18a00ce2c68fb996\allowbreak c0618752136503c6\allowbreak 3f842d5a720db5a3\allowbreak 23ce23696b7cb57f}),
-created November 23, 2026, 4:06 PM CST (America/Chicago).
-\item Environment (from \texttt{environment.txt}): Lean 4.30.0-rc1 (commit
-\texttt{714601ba}), Lake 5.0.0-src+714601b, elan 4.4.0; Mathlib
-\texttt{0c154d67103f74be3a0f2c509f72ccbf5be9f2a7}; \texttt{lake-manifest.json}
-sha256 \texttt{b81d814b\ldots e8ccb8} (checked equal to the pin before and after the build).
-\item \texttt{build.log}: \texttt{Build completed successfully (3291 jobs).}
-\item \texttt{sorry.txt}: 0 \texttt{declaration uses 'sorry'} warnings; 0
-\texttt{sorry}/\texttt{admit}/\texttt{native\_decide}/\texttt{axiom} occurrences outside comments in 7 Lean files.
-\item \texttt{axioms-check.txt}: 30 \texttt{\#print axioms} commands, 30 results, each
-\begin{Verbatim}[fontsize=\small]
-depends on axioms: [propext, Classical.choice, Quot.sound]
-\end{Verbatim}
-for every theorem named in this paper (and the supporting lemmas listed in Section~\ref{sec:antisym}).
-\item \texttt{leanchecker.txt}: \texttt{RESULT: 6 modules replayed through the kernel, 0 failures}
-(the \texttt{leanchecker} shipped with v4.30.0-rc1, run once per module).
-\end{itemize}
-%CERT-END
+Local build logs, and any typed summary of a run in this paper or in the
+README, are not certificates. Read the values from the artifact for that
+commit. Workflow runs:
+\url{https://github.com/BenFrohman/tf-frohmanian-tether-audit/actions}.
 
 \section*{License}
 This paper: CC-BY-4.0. Lean code: Apache-2.0. Copyright \copyright\ 2026
