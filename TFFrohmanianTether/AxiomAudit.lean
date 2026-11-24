@@ -42,3 +42,16 @@ import TFFrohmanianTether.Alignment
 #print axioms TFFrohmanianTether.K_FT_uu_eq_cross_sq
 #print axioms TFFrohmanianTether.K_FT_uu_eq_zero_iff
 #print axioms TFFrohmanianTether.K_FT_uu_nonneg
+#print axioms TFFrohmanianTether.dot_zero_right
+#print axioms TFFrohmanianTether.dot_smul_left
+#print axioms TFFrohmanianTether.sum_squares_eq_zero
+#print axioms TFFrohmanianTether.dot_e₁_e₁
+#print axioms TFFrohmanianTether.dot_e₂_e₂
+#print axioms TFFrohmanianTether.dot_e₁_e₂
+#print axioms TFFrohmanianTether.dot_e₂_e₁
+#print axioms TFFrohmanianTether.dot_e₂_e₃
+#print axioms TFFrohmanianTether.cross_e₂_e₃
+#print axioms TFFrohmanianTether.ω_KKS_e₁_e₂_e₃
+#print axioms TFFrohmanianTether.ω_KKS_e₁_e₁_e₁
+#print axioms TFFrohmanianTether.omega_sq_dot_e₁_e₁_e₁
+#print axioms TFFrohmanianTether.omega_sq_dot_e₁_e₂_e₃
